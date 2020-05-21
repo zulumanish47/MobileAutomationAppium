@@ -1,0 +1,17 @@
+{
+  "invaliduser":
+  {
+    "userName": "nosai",
+    "password": "nosai"
+  },
+  "invalidpassword":
+  {
+    "userName": "nosai",
+    "password": "nosai"
+  },
+  "valid":
+  {
+    "userName": "sai",
+    "password": "sai"
+  }
+}

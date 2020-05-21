@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!--Error text -->
+    <string name="invalid name">Username is not correct</string>
+</resources>
