@@ -1,17 +1,17 @@
 {
-  "invaliduser":
+  "invalidUser":
+  {
+    "userName": "nosai",
+    "password": "zulu007"
+  },
+  "invalidPassword":
   {
     "userName": "nosai",
     "password": "nosai"
   },
-  "invalidpassword":
+  "validUserAndPassword":
   {
-    "userName": "nosai",
-    "password": "nosai"
-  },
-  "valid":
-  {
-    "userName": "sai",
-    "password": "sai"
+    "userName": "0401411583",
+    "password": "zulu007"
   }
 }

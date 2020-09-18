@@ -1,155 +1,235 @@
 package base;
 
-import driverfactory.MobileDriverFactory;
-import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.MobileElement;
+import ExtentReportListener.ExtentReport;
+import com.aventstack.extentreports.Status;
+import io.appium.java_client.*;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.nativekey.KeyEvent;
 import io.appium.java_client.pagefactory.AppiumFieldDecorator;
+import io.appium.java_client.touch.offset.PointOption;
+import org.apache.logging.log4j.ThreadContext;
+import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.touch.TouchActions;
+import org.openqa.selenium.remote.RemoteWebElement;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
+import org.openqa.selenium.support.ui.*;
+import screens.screensInterface;
+import util.GlobalParams;
 import util.TestUtil;
 import util.WebEventListener;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.time.Duration;
 import java.util.HashMap;
-import java.util.Properties;
 
-public class BasePage {
+import static io.appium.java_client.touch.WaitOptions.waitOptions;
+import static io.appium.java_client.touch.offset.PointOption.point;
+import static java.time.Duration.ofMillis;
 
-    public static AppiumDriver<?> ad;
-    protected Properties props;
-    //use input stream as file is in withing package level
-    protected InputStream inputStream;
-    protected InputStream stringsIS;
-    TestUtil testUtils;
-    public static EventFiringWebDriver e_driver;
-    public static WebEventListener eventListener;
-    public static DSLNew _dsl;
-    private HashMap<String, String> Strings;
+public abstract class BasePage implements screensInterface {
+
+    private AppiumDriver<?> ad;
+    private static ThreadLocal<WebDriverWait> WAIT = new ThreadLocal<>();
+
+   //  public static EventFiringWebDriver e_driver;
+     public static WebEventListener eventListener;
+   //  public static DSLNew _dsl;
 
     public BasePage()
     {
-        PageFactory.initElements(new AppiumFieldDecorator(ad),this);
+        log("Launching constructor of basepage");
     }
 
-    @Parameters({"platformName","platformVersion","deviceName"})
-    @BeforeTest
-    public synchronized void setup(String platformName,String platformVersion ,String deviceName) throws IOException {
-        try {
-//            props = new Properties();
-//            String propFileName= "config.properties";
-//            inputStream =getClass().getClassLoader().getResourceAsStream(propFileName);
-            String xmlFileName="strings/String.xml";
-            stringsIS=getClass().getClassLoader().getResourceAsStream(xmlFileName);
-    //        props.load(inputStream);
-            testUtils =new TestUtil();
-           Strings= testUtils.parseStringXML(stringsIS);
-           ad= MobileDriverFactory.getMobileDriver(platformName);
-
-
-//            DesiredCapabilities dc = new DesiredCapabilities();
-//            dc.setCapability(MobileCapabilityType.DEVICE_NAME, deviceName);
-//            dc.setCapability("avd", "Pixel_XL_API_27");
-//            dc.setCapability("platformName", platformName);
-//            dc.setCapability("platformVersion",platformVersion);
-
-//            URL appURL =getClass().getClassLoader().getResource(props.getProperty("androidAppLocation"));
-//            dc.setCapability("app", appURL);
-//            dc.setCapability("appPackage", props.getProperty("androidAppPackage"));
-//            dc.setCapability("appActivity", props.getProperty("androidAppActivity"));
-//            dc.setCapability("androidInstallTimeout", 50000);
-//            dc.setCapability(MobileCapabilityType.NEW_COMMAND_TIMEOUT, 60);
-//            dc.setCapability("automationName", props.getProperty("androidAutomationName"));
-
-
-   //         URL url = new URL(props.getProperty("appiumURL"));
-
-            // dc.setCapability(CapabilityType.PLATFORM_NAME,"android");
-          //parent class of android and ios driver
-          // ad = new AppiumDriver<MobileElement>(url,dc);
-
-           //specific driver of android
-   //        ad = new AndroidDriver<AndroidElement>(url, dc);
-                     // ad = new IOSDriver<MobileElement>(url,dc);
-        }
-        catch(Exception ex)
-        {
-            System.out.println("Cause is :" +ex.getCause());
-            System.out.println("Message is :" +ex.getMessage());
-            ex.printStackTrace();
-
-        }
-        finally {
-            if(inputStream!=null)
-            {
-                inputStream.close();
-            }
-            if(stringsIS!=null)
-            {
-                stringsIS.close();
-            }
-        }
+    public BasePage(AppiumDriver driver)
+    {
+        PageFactory.initElements(new AppiumFieldDecorator(driver),this);
+        this.ad =driver;
+        setWAIT(140);
+        log("Launching parametrised constructor of basepage");
     }
 
-
-
-
-
-    @AfterTest
-    public void teardown() {
-        ad.quit();
+    private void setWAIT(int TimeinSeconds)
+    {
+        WAIT.set(new WebDriverWait(ad,TimeinSeconds));
     }
+
 
     public void waitforVisibility(MobileElement e)
     {
-        WebDriverWait wait = new WebDriverWait(ad , TestUtil.WAIT);
+        log("Waiting for visiblity of element "+e.toString());
+        WebDriverWait wait = WAIT.get();
         wait.until(ExpectedConditions.visibilityOf(e));
+      //  wait.until(ExpectedConditions.elementToBeClickable(e));
     }
 
     public void click(MobileElement e)
     {
         waitforVisibility(e);
         e.click();
+        log("Click on  "+e.toString());
     }
 
     public void sendKeys(MobileElement e , String txt)
     {
         waitforVisibility(e);
         e.sendKeys(txt);
+        log("send keys :  "+e.toString());
+    }
+    public void clickAt ( )
+    {
+        TouchAction touchAction = new TouchAction(ad);
+        touchAction.tap(PointOption.point(648, 1243)).perform();
+        //(new TouchAction(ad)).tap.perform();
+    }
+    public void refresh()
+    {
+        ad.navigate().refresh();
     }
 
-    public void getAttribute(MobileElement e , String attribute)
+    public String getAttribute(MobileElement e , String attribute)
     {
         waitforVisibility(e);
-        e.getAttribute(attribute);
+        return e.getAttribute(attribute);
     }
 
     public void pressEnter()
     {
         ((AndroidDriver<MobileElement>)ad).pressKey(new KeyEvent(AndroidKey.ENTER));
+        log("Press enter.. ");
     }
 
 
+    public MobileElement scrollToElement() {
+        ad.context("WEBVIEW");
 
-//    public static boolean waitForPresence(AndroidDriver driver, int timeLimitInSeconds, String targetResourceId){
-//        Boolean isElementPresent;
-//        try{
-//            mobileElement =  (MobileElement) driver.findElementByAndroidUIAutomator("new UiSelector().resourceId(\""+targetResourceId+"\")");
-//            WebDriverWait wait = new WebDriverWait(driver, timeLimitInSeconds);
-//            wait.until(ExpectedConditions.visibilityOf(mobileElement));
-//            isElementPresent = mobileElement.isDisplayed();
-//            return isElementPresent;
-//        }catch(Exception e){
-//            isElementPresent = false;
-//            System.out.println(e.getMessage());
-//            return isElementPresent;
-//        } }
+        return (MobileElement)((FindsByAndroidUIAutomator) ad).findElementByAndroidUIAutomator(
+         "new UiScrollable(new UiSelector()).scrollIntoView("
+                                     + "new UiSelector().textMatches(\"Australia + 61\n\"));");
+//
+        //  "new UiSelector().textMatches(\"Australia + 61\")");
+        // "new UiScrollable(new UiSelector().resourceId(\"country_bottom_sheet_container_signin\")).scrollToBeginning(50)");
+
+//
+//        return (MobileElement) ((FindsByAndroidUIAutomator)ad).findElementByAndroidUIAutomator(
+
+
+
+
+    }
+
+    public void scroll(MobileElement element){
+//        TouchActions action = new TouchActions(ad);
+//        action.scroll(element, 10, 100);
+//        action.perform();
+
+    }
+    public void scroll(String direction, int duration) {
+        Double screenHeightStart,screenHeightEnd;
+        Dimension dimensions = ad.manage().window().getSize();
+
+        screenHeightStart = dimensions.getHeight() * 0.5;
+        screenHeightEnd = dimensions.getHeight() * 0.2;
+
+        int scrollStart = screenHeightStart.intValue();
+        int scrollEnd = screenHeightEnd.intValue();
+        if (direction == "UP") {
+            //ad.(0, scrollEnd, 0, scrollStart, duration);
+        } else if (direction == "DOWN") {
+          //  ad.swipe(0, scrollStart, 0, scrollEnd, duration);
+        }
+    }
+
+    public void scrollVertical()
+    {
+        try {
+             ad.findElements(MobileBy.AndroidUIAutomator(
+                    "new UiScrollable(new UiSelector()).setAsVerticalList().flingToEnd(10);"));
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+
+    public void iOSScrollToElement() {
+        RemoteWebElement element = (RemoteWebElement)ad.findElement(By.name("test-ADD TO CART"));
+        String elementID = element.getId();
+        HashMap<String, String> scrollObject = new HashMap<String, String>();
+        scrollObject.put("element", elementID);
+//	  scrollObject.put("direction", "down");
+//	  scrollObject.put("predicateString", "label == 'ADD TO CART'");
+//	  scrollObject.put("name", "test-ADD TO CART");
+        scrollObject.put("toVisible", "sdfnjksdnfkld");
+        ad.executeScript("mobile:scroll", scrollObject);
+    }
+
+    public AppiumDriver getDriver() {
+        return ad;
+    }
+
+    public void waitForVisibility(WebElement e){
+        Wait<WebDriver> wait = new FluentWait<WebDriver>(getDriver())
+                .withTimeout(Duration.ofSeconds(30))
+                .pollingEvery(Duration.ofSeconds(5))
+                .ignoring(NoSuchElementException.class);
+
+        wait.until(ExpectedConditions.visibilityOf(e));
+        wait.until(ExpectedConditions.elementToBeClickable(e));
+    }
+    public String getText(MobileElement e, String msg) {
+        String txt = null;
+        switch(GlobalParams.getInstance().getPlatform()) {
+            case "Android":
+                txt = getAttribute(e, "text");
+                break;
+            case "iOS":
+                txt = getAttribute(e, "label");
+                break;
+        }
+        log(msg + txt);
+        ExtentReport.getTest().log(Status.INFO, msg);
+        return txt;
+    }
+
+    public boolean find(final By element, int timeout) {
+        try {
+            WebDriverWait wait = new WebDriverWait(ad, timeout);
+            return wait.until(new ExpectedCondition<Boolean>() {
+                @Override
+                public Boolean apply(WebDriver driver) {
+                    if (driver.findElement(element).isDisplayed()) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    public void swipe(int startX, int startY, int endX, int endY, int millis)
+            throws InterruptedException {
+        TouchAction t = new TouchAction(ad);
+        t.press(point(startX, startY)).waitAction(waitOptions(ofMillis(millis))).moveTo(point(endX, endY)).release()
+                .perform();
+    }
+    public static void log(String message)
+    {
+        TestUtil.getInstance().log().info("Thread id "
+                +Thread.currentThread().getId()
+                +" "
+                +message);
+    }
+    protected final <T extends BasePage, U> T launchPage(Class<T> t)
+    {
+        try
+        {
+           // T page = t.newInstance();
+            return t.getDeclaredConstructor(WebDriver.class).newInstance(this.ad);
+            //return page;
+        }
+        catch (Exception e)
+        {
+        }
+        return null;
+    }
 }

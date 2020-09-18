@@ -1,16 +1,19 @@
 package driverfactory;
 
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.MobileElement;
 
 import java.io.IOException;
 
 public final class MobileDriverFactory {
 
+    private static final ThreadLocal<AppiumDriver<MobileElement>> driver = new ThreadLocal<>();
     private MobileDriverFactory(){};
 
-    public static AppiumDriver getMobileDriver(String platform) throws IOException {
+    public static void getMobileDriver(String platform) throws IOException {
         MobileDriver mobileDriver;
-        AppiumDriver driver=null;
+
+       // AppiumDriver driver=null;
 
         switch (platform)
         {
@@ -25,9 +28,17 @@ public final class MobileDriverFactory {
             default:
                 mobileDriver =null;
         }
-        driver =mobileDriver.setUpDriver();
+        driver.set(mobileDriver.setUpDriver());
 
-            return driver;
+           // return driver;
+    }
+
+    public static AppiumDriver getMobileDriverInstance(){
+        return driver.get();
+    }
+
+    public static void quit(){
+        driver.get().quit();
     }
 
 
